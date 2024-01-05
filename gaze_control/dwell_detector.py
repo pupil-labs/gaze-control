@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 class DwellDetector():
     def __init__(self, minimum_delay_seconds, range_pixels):

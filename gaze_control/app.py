@@ -1,12 +1,8 @@
-import sys
-import json
-
 from pupil_labs.realtime_api.simple import discover_one_device
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
 
 import pyautogui
 
