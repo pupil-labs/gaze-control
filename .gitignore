@@ -1,6 +1,5 @@
 cache
 *.pyc
 __pycache__
-.vscode
-
-scene_camera.json
+.vscode/
+.venv/
