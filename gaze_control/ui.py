@@ -17,6 +17,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
+    QScrollArea,
     QSizePolicy,
     QSpacerItem,
     QTabWidget,
@@ -25,7 +26,16 @@ from PySide6.QtWidgets import (
 
 from pupil_labs.real_time_screen_gaze import marker_generator
 
-from .forms import TagOptionsWidget, MouseOptionsWidget
+from .forms import (
+    ActionOptionsWidget,
+    MouseOptionsWidget,
+    TagOptionsWidget,
+)
+
+from .actions import (
+    Action,
+    ScreenEdge,
+)
 
 def create_marker(marker_id):
     marker = marker_generator.generate_marker(marker_id, flip_x=True, flip_y=True)
@@ -50,6 +60,8 @@ class TagWindow(QWidget):
     dwell_radius_changed = Signal(int)
     dwell_time_changed = Signal(float)
     smoothing_changed = Signal(float)
+    edge_action_changed = Signal(ScreenEdge, Action)
+
 
     def __init__(self):
         super().__init__()
@@ -69,6 +81,7 @@ class TagWindow(QWidget):
 
         self.tabs = QTabWidget()
         self.forms = {
+            'Edge Actions': ActionOptionsWidget(),
             'Tags': TagOptionsWidget(),
             'Mouse': MouseOptionsWidget(),
         }
@@ -79,9 +92,14 @@ class TagWindow(QWidget):
         self.forms['Mouse'].dwell_radius_changed.connect(self.dwell_radius_changed.emit)
         self.forms['Mouse'].dwell_time_changed.connect(self.dwell_time_changed.emit)
         self.forms['Mouse'].mouse_enabled_changed.connect(self.mouse_enable_changed.emit)
+        self.forms['Edge Actions'].edge_action_changed.connect(self.edge_action_changed.emit)
 
         for form_name, form in self.forms.items():
-            self.tabs.addTab(form, form_name)
+            scroll_area = QScrollArea()
+            scroll_area.setWidget(form)
+            scroll_area.setWidgetResizable(True)
+
+            self.tabs.addTab(scroll_area, form_name)
 
         self.instructions_label = QLabel('Right-click one of the tags to toggle settings view.')
         self.instructions_label.setAlignment(Qt.AlignHCenter)
@@ -215,7 +233,6 @@ class TagWindow(QWidget):
                 mask = mask.united(rect)
 
         self.setMask(mask)
-
 
     def get_corner_rect(self, corner_idx):
         tag_size = self.get_marker_size()

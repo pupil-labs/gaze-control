@@ -1,13 +1,28 @@
+from enum import Enum, auto
+
 from PySide6.QtCore import Signal
 
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
+    QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QLabel,
     QSpinBox,
+    QVBoxLayout,
     QWidget,
 )
 
+from .actions import (
+    Action,
+    registered_actions,
+    ScreenEdge,
+)
+from .property_widget import (
+    create_property_widget,
+    get_properties
+)
 
 class TagOptionsWidget(QWidget):
     tag_size_changed = Signal(int)
@@ -68,3 +83,64 @@ class MouseOptionsWidget(QWidget):
         self.layout().addRow('Dwell Radius', self.dwell_radius_input)
         self.layout().addRow('Dwell Time', self.dwell_time_input)
         self.layout().addRow('', self.mouse_enabled_input)
+
+
+class ActionOptionsWidget(QWidget):
+    edge_action_changed = Signal(ScreenEdge, Action)
+
+    def __init__(self):
+        super().__init__()
+
+        self.setLayout(QVBoxLayout())
+
+        for edge in ScreenEdge:
+            edge_action_widget = ActionWidget(str(edge))
+            self.layout().addWidget(edge_action_widget)
+            edge_action_widget.action_changed.connect(lambda action, edge=edge: self.on_action_changed(edge, action))
+
+    def on_action_changed(self, edge, action):
+        QApplication.instance().set_edge_action(edge, action)
+
+
+class ActionWidget(QWidget):
+    action_changed = Signal(object)
+
+    def __init__(self, label_text):
+        super().__init__()
+
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(QLabel(label_text))
+
+        self.action_selector = QComboBox()
+        for action in registered_actions:
+            self.action_selector.addItem(action.friendly_name, action)
+
+        self.action_selector.currentIndexChanged.connect(self.on_action_index_changed)
+
+        self.layout().addWidget(self.action_selector)
+
+        self.parameters_container = QWidget()
+        self.parameters_container.setLayout(QFormLayout())
+
+        self.layout().addWidget(self.parameters_container)
+
+    def on_action_index_changed(self, idx):
+        action_cls = self.action_selector.itemData(idx)
+        action = action_cls()
+        self.set_value(action)
+
+        self.action_changed.emit(action)
+
+    def set_value(self, action):
+        param_layout = self.parameters_container.layout()
+        while param_layout.count() > 0:
+            w = param_layout.takeAt(0).widget()
+            w.setParent(None)
+
+        props = get_properties(action.__class__)
+        for property_name, prop in props.items():
+            widget = create_property_widget(prop)
+            widget.setValue(prop.fget(action))
+            widget.valueChanged.connect(lambda v, prop=prop: prop.fset(action, v))
+
+            param_layout.addRow(property_name, widget)

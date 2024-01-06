@@ -1,17 +1,26 @@
 from pupil_labs.realtime_api.simple import discover_one_device
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import (
+    QRect,
+    QTimer,
+)
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QCursor
 
 import pyautogui
 
 from .ui import TagWindow
 from .dwell_detector import DwellDetector
+from .actions import ScreenEdge
 
 pyautogui.FAILSAFE = False
 
 class PupilPointerApp(QApplication):
+    @staticmethod
+    def instance():
+        return QApplication.instance()
+
     def __init__(self):
         super().__init__()
 
@@ -28,9 +37,8 @@ class PupilPointerApp(QApplication):
 
         self.tag_window.dwell_time_changed.connect(self.dwell_detector.set_duration)
         self.tag_window.dwell_radius_changed.connect(self.dwell_detector.set_range)
-        self.tag_window.mouse_enable_changed.connect(self.setMouseEnabled)
-        self.tag_window.smoothing_changed.connect(self.setSmoothing)
-
+        self.tag_window.mouse_enable_changed.connect(self.set_mouse_enabled)
+        self.tag_window.smoothing_changed.connect(self.set_smoothing)
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000/30)
@@ -41,6 +49,25 @@ class PupilPointerApp(QApplication):
 
         self.mouse_position = None
         self.gaze_mapper = None
+
+
+        w = self.primaryScreen().size().width()
+        h = self.primaryScreen().size().height()
+
+        size = 500
+        self.edge_regions = {
+            ScreenEdge.TOP_LEFT:     QRect(-size, -size, size, size),
+            ScreenEdge.TOP:          QRect(    0, -size,    w, size),
+            ScreenEdge.TOP_RIGHT:    QRect(    w, -size, size, size),
+            ScreenEdge.LEFT:         QRect(-size,     0, size,    h),
+            ScreenEdge.RIGHT:        QRect(    w,     0, size,    h),
+            ScreenEdge.BOTTOM_LEFT:  QRect(-size,     h, size, size),
+            ScreenEdge.BOTTOM:       QRect(    0,     h,    w, size),
+            ScreenEdge.BOTTOM_RIGHT: QRect(    w,     h, size, size),
+        }
+
+        self.edge_actions = {}
+
 
     def on_surface_chhanged(self):
         self.update_surface()
@@ -71,14 +98,17 @@ class PupilPointerApp(QApplication):
             self.tag_window.get_surface_size()
         )
 
-    def setMouseEnabled(self, enabled):
+    def set_mouse_enabled(self, enabled):
         self.mouse_enabled = enabled
 
-    def setSmoothing(self, value):
+    def set_smoothing(self, value):
         self.smoothing = value
 
+    def set_edge_action(self, edge, action):
+        self.edge_actions[edge] = action
+
     def poll(self):
-        frame_and_gaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=1/15)
+        frame_and_gaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=1/30)
 
         if frame_and_gaze is None:
             return
@@ -106,9 +136,17 @@ class PupilPointerApp(QApplication):
 
                 changed, dwell, dwell_position = self.dwell_detector.add_point(mouse_point.x(), mouse_point.y(), gaze.timestamp_unix_seconds)
                 if changed and dwell:
-                    self.tag_window.set_clicked(True)
-                    if self.mouse_enabled:
-                        pyautogui.click(x=dwell_position[0], y=dwell_position[1])
+                    print('dwell at', dwell_position)
+
+                    for edge,rect in self.edge_regions.items():
+                        if rect.contains(mouse_point) and edge in self.edge_actions:
+                            action = self.edge_actions[edge]
+                            action.execute()
+                            break
+                    else:
+                        self.tag_window.set_clicked(True)
+                        if self.mouse_enabled:
+                            pyautogui.click(x=dwell_position[0], y=dwell_position[1])
                 else:
                     self.tag_window.set_clicked(False)
 
