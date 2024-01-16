@@ -76,6 +76,10 @@ class GazeControlApp(QApplication):
             screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
+        # TODO: is there a nicer way to implement this?
+        self.main_window.calibration_widget.map_to_scene_video = (
+            self.eye_tracking_provider.map_to_scene_video
+        )
 
         self.action_configs = []
         self._load_settings()
@@ -168,6 +172,8 @@ class GazeControlApp(QApplication):
         self._mode = value
         self._clear_mode_artefacts()
 
+        self._clear_all_modes()
+
         if value == AppMode.View:
             pass
         elif value == AppMode.Click:
@@ -177,7 +183,8 @@ class GazeControlApp(QApplication):
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
-            raise NotImplementedError()
+            self.main_window.keyboard.toggleKeyboard(False)
+            self.main_window.calibration_widget.start()
         else:
             raise ValueError(f"Unknown mode {value}")
 
@@ -444,7 +451,7 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 self.main_window.keyboard.update_data(eye_tracking_data.gaze)
         elif self.mode == AppMode.Calibrate:
-            pass
+            self.main_window.calibration_widget.update_data(eye_tracking_data)
 
     def exec(self):
         self.settings_window.show()

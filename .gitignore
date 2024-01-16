@@ -9,3 +9,5 @@ training_data.npy
 training_labels.npy
 predictor.pkl
 calib_backup/
+.DS_Store
+```
