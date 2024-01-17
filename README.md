@@ -102,6 +102,6 @@ A series of gaze targets will then be presented on the screen. Your task is to l
 
 Try not to blink while the target is green. It is fine to blink while a target is still red, so you can blink briefly between all targets.
 
-Once all targets have been presented, the calibration result will be output in the terminal and applied  to the gaze targets immediately. The calibration will be saved in the `predictor.pkl` file. To rest the calibration, you can either delete this file and restart the application, or execute the calibration procedure again.
+Once all targets have been presented, the calibration result will be output in the terminal and applied to the gaze targets immediately. The calibration will be saved in the `predictor.pkl` file. To rest the calibration, you can either delete this file and restart the application, or execute the calibration procedure again.
 
-When you start Gaze Control, it will automatically use the calibration file id one is available.
+When you start Gaze Control, it will automatically use the calibration file if one is available.
