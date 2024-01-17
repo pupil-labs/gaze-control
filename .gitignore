@@ -6,7 +6,7 @@ __pycache__
 
 scene_camera.json
 *.npy
-predictor.pkl
+*.pkl
 calib_backup/
 .DS_Store
 ```

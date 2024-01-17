@@ -2,16 +2,19 @@ import numpy as np
 import time
 import joblib
 
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
 from .target_presenter import TargetPresenter
 
 
 class CalibrationWidget(QWidget):
-    key_pressed = Signal(QKeyEvent)
+    predictor_changed = Signal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -88,13 +91,34 @@ class CalibrationWidget(QWidget):
         if self.calibration_step == "training":
             np.save("training_gaze_data.npy", gaze_data)
             np.save("training_target_data.npy", target_data)
+            self._estimate_predictor(gaze_data, target_data)
+            self.predictor_changed.emit()
             self.calibration_step = "validation"
             targets = self._generate_target_locations("validation", self.markers)
             self.target_presenter.start(targets)
         elif self.calibration_step == "validation":
             np.save("validation_gaze_data.npy", gaze_data)
             np.save("validation_target_data.npy", target_data)
+            self._validate_predictor(gaze_data, target_data)
             self.stop()
+
+    def _estimate_predictor(self, gaze_data, target_data):
+        predictor = Pipeline(
+            [
+                ("poly", PolynomialFeatures(degree=3, include_bias=True)),
+                ("linear", LinearRegression()),
+            ]
+        )
+
+        predictor.fit(gaze_data, target_data)
+        joblib.dump(predictor, "predictor.pkl")
+
+    def _validate_predictor(self, gaze_data, target_data):
+        predictor = joblib.load("predictor.pkl")
+        predictions = predictor.predict(gaze_data)
+        error_orig = np.linalg.norm(gaze_data - target_data, axis=1).mean()
+        error_corrected = np.linalg.norm(predictions - target_data, axis=1).mean()
+        print(f"Error orig: {error_orig} \t Error corrected: {error_corrected}")
 
     def resizeEvent(self, event):
         self.target_presenter.resize(self.size())
