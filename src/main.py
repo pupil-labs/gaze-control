@@ -111,8 +111,6 @@ class GazeControlApp(QApplication):
         self.main_window.selection_zoom.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        self.mode = AppMode.View
-
     @property
     def mode(self) -> AppMode:
         return self._mode
@@ -125,8 +123,6 @@ class GazeControlApp(QApplication):
         self._mode = value
         self._clear_mode_artefacts()
 
-        self._clear_all_modes()
-
         if value == AppMode.View:
             pass
         elif value == AppMode.Click:
@@ -136,14 +132,20 @@ class GazeControlApp(QApplication):
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
-            self.main_window.keyboard.toggleKeyboard(False)
-            self.main_window.calibration_widget.start()
+            self.main_window.gaze_overlay.setVisible(False)
+            self.main_window.mode_menu.enabled = False
+            self.main_window.calibration_widget.start(
+                self.main_window.marker_overlay.markers
+            )
         else:
             raise ValueError(f"Unknown mode {value}")
 
     def _clear_mode_artefacts(self):
         self.main_window.keyboard.setVisible(False)
         self.main_window.selection_zoom.setVisible(False)
+        self.main_window.calibration_widget.stop()
+        self.main_window.gaze_overlay.setVisible(True)
+        self.main_window.mode_menu.enabled = True
 
     def save_settings(self):
         try:

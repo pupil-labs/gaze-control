@@ -5,8 +5,7 @@ __pycache__
 .venv
 
 scene_camera.json
-training_data.npy
-training_labels.npy
+*.npy
 predictor.pkl
 calib_backup/
 .DS_Store

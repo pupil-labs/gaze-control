@@ -228,4 +228,6 @@ class ShowModeMenuAction(Action):
     friendly_name = "Show Mode Menu"
 
     def execute(self, trigger_event):
-        QApplication.instance().main_window.mode_menu.setVisible(True)
+        mode_menu = QApplication.instance().main_window.mode_menu
+        if mode_menu.enabled:
+            mode_menu.setVisible(True)
