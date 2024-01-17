@@ -11,7 +11,7 @@ from widgets.gaze_overlay import GazeOverlay
 from widgets.keyboard import Keyboard
 from widgets.selection_zoom import SelectionZoom
 from widgets.mode_menu import ModeMenu
-from widgets.calibration_widget import CalibrationWidget
+from widgets.calibration import CalibrationWidget
 
 
 class MainWindow(QWidget):

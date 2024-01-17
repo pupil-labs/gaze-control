@@ -52,8 +52,12 @@ class GazeControlApp(QApplication):
         self._use_zoom = True
 
         self.hotkey_manager = HotkeyManager()
-        self.killswitch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_K)
-        self.pause_switch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_P)
+        self.killswitch_key = QKeyCombination(
+            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
+        )
+        self.pause_switch_key = QKeyCombination(
+            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
+        )
         self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
@@ -93,7 +97,9 @@ class GazeControlApp(QApplication):
             "General Options",
         )
         self.settings_window.add_object_page(self.main_window.marker_overlay, "Markers")
-        self.settings_window.add_object_page(self.main_window.selection_zoom, "Zoom-clicking")
+        self.settings_window.add_object_page(
+            self.main_window.selection_zoom, "Zoom-clicking"
+        )
 
         self.action_settings_widget = ActionSettingsWidget(self.action_configs)
         self.action_settings_widget.action_config_added.connect(self.add_action_config)
@@ -127,7 +133,7 @@ class GazeControlApp(QApplication):
         """
         :requires_modifier
         """
-        return self.hotkey_manager.get_hotkey('killswitch')
+        return self.hotkey_manager.get_hotkey("killswitch")
 
     @killswitch_key.setter
     def killswitch_key(self, value):
@@ -137,7 +143,7 @@ class GazeControlApp(QApplication):
             else:
                 value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey('killswitch', value)
+        self.hotkey_manager.set_hotkey("killswitch", value)
 
         self.save_settings()
 
@@ -146,7 +152,7 @@ class GazeControlApp(QApplication):
         """
         :requires_modifier
         """
-        return self.hotkey_manager.get_hotkey('pause_switch')
+        return self.hotkey_manager.get_hotkey("pause_switch")
 
     @pause_switch_key.setter
     def pause_switch_key(self, value):
@@ -156,7 +162,7 @@ class GazeControlApp(QApplication):
             else:
                 value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey('pause_switch', value)
+        self.hotkey_manager.set_hotkey("pause_switch", value)
 
         self.save_settings()
 
@@ -172,8 +178,6 @@ class GazeControlApp(QApplication):
         self._mode = value
         self._clear_mode_artefacts()
 
-        self._clear_all_modes()
-
         if value == AppMode.View:
             pass
         elif value == AppMode.Click:
@@ -183,14 +187,20 @@ class GazeControlApp(QApplication):
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
-            self.main_window.keyboard.toggleKeyboard(False)
-            self.main_window.calibration_widget.start()
+            self.main_window.gaze_overlay.setVisible(False)
+            self.main_window.mode_menu.enabled = False
+            self.main_window.calibration_widget.start(
+                self.main_window.marker_overlay.markers
+            )
         else:
             raise ValueError(f"Unknown mode {value}")
 
     def _clear_mode_artefacts(self):
         self.main_window.keyboard.setVisible(False)
         self.main_window.selection_zoom.setVisible(False)
+        self.main_window.calibration_widget.stop()
+        self.main_window.gaze_overlay.setVisible(True)
+        self.main_window.mode_menu.enabled = True
 
     def _on_hotkey_pressed(self, action, key_combo):
         if action == "killswitch":

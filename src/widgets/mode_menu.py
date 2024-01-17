@@ -13,6 +13,8 @@ class ModeMenu(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.enabled = True
+
         self.disappear_timeout = 3.0
         self.lost_focus_at = None
 
@@ -52,6 +54,9 @@ class ModeMenu(QWidget):
         self.setAutoFillBackground(True)
 
     def update_data(self, eye_tracking_data):
+        if not self.enabled:
+            return False
+
         mode_change = False
         if self.isVisible():
             if eye_tracking_data.gaze is None:
