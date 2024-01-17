@@ -78,7 +78,9 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
             screen_size=(screen_size.width(), screen_size.height()),
-            use_calibrated_gaze=True,
+        )
+        self.main_window.calibration_widget.predictor_changed.connect(
+            self.eye_tracking_provider.load_predictor
         )
         # TODO: is there a nicer way to implement this?
         self.main_window.calibration_widget.map_to_scene_video = (

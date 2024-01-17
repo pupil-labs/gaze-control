@@ -27,20 +27,24 @@ EyeTrackingData = namedtuple(
 
 
 class EyeTrackingProvider(RawDataReceiver):
-    def __init__(self, markers, screen_size, use_calibrated_gaze=True):
+    def __init__(self, markers, screen_size):
         super().__init__()
         self.markers = markers
         self.screen_size = screen_size
 
-        self.predictor = None
-        if use_calibrated_gaze and os.path.exists("predictor.pkl"):
-            self.predictor = joblib.load("predictor.pkl")
-        else:
-            print("No predictor found. Providing uncorrected gaze.")
+        self.load_predictor()
 
         self.surface = None
         self.gazeMapper = None
         self.dwell_detector = DwellDetector()
+
+    def load_predictor(self):
+        self.predictor = None
+        if os.path.exists("predictor.pkl"):
+            self.predictor = joblib.load("predictor.pkl")
+            print("Loaded predictor.")
+        else:
+            print("No predictor found. Providing uncorrected gaze.")
 
     def connect(self, auto_discover=False, ip=None, port=None):
         result = super().connect(auto_discover, ip, port)
