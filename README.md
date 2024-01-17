@@ -94,20 +94,14 @@ Selecting one of the keys will trigger the corresponding key press in the curren
 
 While the keyboard is enabled, selecting things outside of the Gaze Control app is disabled. This means if you want to type inside of e.g. a text editor, you need to open the text editor first, position the cursor at the right location, and then enable the keyboard mode.
 
-<!--
 # Calibration
-If the gaze estimation results on the screen are insufficient in accuracy, you have the option to perform a calibration. To start a calibration execute the calibration program using the following command (the main Gaze Control app should not be running while calibrating):
-```bash
-python src/calibration.py
-```
+If the gaze estimation results on the screen are insufficient in accuracy, you have the option to perform a calibration. To start a calibration, switch to calibration mode in the settings.
 
-Similar to Gaze Control, this will open a main window as well as a debug window. The main window contains the same markers Gaze Control does, but it is not transparent.
 
-To start the calibration process hit the Enter key. A series of gaze targets will then be presented on the screen. Your task is to look at them continuously one after the other.
+A series of gaze targets will then be presented on the screen. Your task is to look at them continuously one after the other.
 
 Try not to blink while the target is green. It is fine to blink while a target is still red, so you can blink briefly between all targets.
 
-Once all targets have been presented and the calibration result will be saved in a file called `predictor.pkl`. The application will automatically close down after the calibration is finished.
+Once all targets have been presented, the calibration result will be output in the terminal and applied  to the gaze targets immediately. The calibration will be saved in the `predictor.pkl` file. To rest the calibration, you can either delete this file and restart the application, or execute the calibration procedure again.
 
-When you start Gaze Control again, it will automatically load the calibration result from the file and use it for improved gaze estimation.
--->
+When you start Gaze Control, it will automatically use the calibration file id one is available.
