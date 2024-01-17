@@ -82,10 +82,6 @@ class GazeControlApp(QApplication):
         self.main_window.calibration_widget.predictor_changed.connect(
             self.eye_tracking_provider.load_predictor
         )
-        # TODO: is there a nicer way to implement this?
-        self.main_window.calibration_widget.map_to_scene_video = (
-            self.eye_tracking_provider.map_to_scene_video
-        )
 
         self.action_configs = []
         self._load_settings()
@@ -380,6 +376,10 @@ class GazeControlApp(QApplication):
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
+        # TODO: is there a nicer way to implement this?
+        self.main_window.calibration_widget.map_to_scene_video = (
+            self.eye_tracking_provider.map_to_scene_video
+        )
 
     def on_mouse_click(self, pos: QPoint):
         pyautogui.click(pos.x(), pos.y())
