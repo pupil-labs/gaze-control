@@ -189,7 +189,8 @@ class GazeControlApp(QApplication):
             self.main_window.speak_panel.setVisible(True)
             self.main_window.keyboard.setVisible(True)
             self._set_window_transparency_for_input(False)
-            self.main_window.speak_panel.activateWindow()
+            self.main_window.raise_()
+            self.main_window.activateWindow()
             self.main_window.speak_panel.text_edit.setFocus()
         elif value == AppMode.Calibrate:
             self.main_window.gaze_overlay.setVisible(False)
@@ -475,6 +476,9 @@ class GazeControlApp(QApplication):
         elif self.mode == AppMode.Zoom:
             self.main_window.selection_zoom.update_data(eye_tracking_data)
         elif self.mode == AppMode.Keyboard:
+            if eye_tracking_data.dwell_process == 1.0:
+                self.main_window.keyboard.update_data(eye_tracking_data.gaze)
+        elif self.mode == AppMode.Speak:
             if eye_tracking_data.dwell_process == 1.0:
                 self.main_window.keyboard.update_data(eye_tracking_data.gaze)
         elif self.mode == AppMode.Calibrate:

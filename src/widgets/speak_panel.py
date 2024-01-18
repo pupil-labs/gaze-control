@@ -26,8 +26,11 @@ class SpeakPanel(QWidget):
         main_layout.addWidget(self.reset_btn, 1, 0, 1, 1)
 
         self.text_edit = QTextEdit()
-        self.text_edit.setText("Hello World!")
-        self.text_edit.setStyleSheet("background-color: #0000ff;")
+        self.text_edit.setStyleSheet("background-color: lightgray;")
+        self.text_edit.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setPointSize(48)
+        self.text_edit.setFont(font)
         # self.text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         main_layout.addWidget(self.text_edit, 0, 2, 2, 4)
 
