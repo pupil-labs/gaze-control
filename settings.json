@@ -1,11 +1,10 @@
 {
     "main": {
-        "mode": "View",
-        "use_zoom": 2
+        "mode": "View"
     },
     "marker_overlay": {
-        "marker_brightness": 219.0,
-        "marker_size": 213
+        "marker_brightness": 245.0,
+        "marker_size": 259
     },
     "dwell_detector": {
         "dwell_time": 0.75,

@@ -11,6 +11,7 @@ from widgets.gaze_overlay import GazeOverlay
 from widgets.keyboard import Keyboard
 from widgets.selection_zoom import SelectionZoom
 from widgets.mode_menu import ModeMenu
+from widgets.calibration import CalibrationWidget
 
 
 class MainWindow(QWidget):
@@ -28,14 +29,13 @@ class MainWindow(QWidget):
         # Make window transparent for mouse events such that any click will be passed through to the window below.
         self.setWindowFlag(Qt.WindowTransparentForInput)
 
-        self.marker_overlay = MarkerOverlay(self)
-
         self.selection_zoom = SelectionZoom()
 
         self.keyboard = Keyboard(self)
+        self.calibration_widget = CalibrationWidget(self)
 
         self.mode_menu = ModeMenu(self)
-
+        self.marker_overlay = MarkerOverlay(self)
         self.gaze_overlay = GazeOverlay()
         self.gaze_overlay.setParent(self)
 
@@ -64,6 +64,7 @@ class MainWindow(QWidget):
         self.marker_overlay.resize(self.size())
         self.gaze_overlay.resize(self.size())
         self.keyboard.setGeometry(0, self.height() / 2, self.width(), self.height() / 2)
+        self.calibration_widget.resize(self.size())
         self.mode_menu.setGeometry(
             0,
             self.height() * 0.2,

@@ -67,7 +67,9 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
             screen_size=(screen_size.width(), screen_size.height()),
-            use_calibrated_gaze=True,
+        )
+        self.main_window.calibration_widget.predictor_changed.connect(
+            self.eye_tracking_provider.load_predictor
         )
 
         self.action_configs = []
@@ -108,8 +110,6 @@ class GazeControlApp(QApplication):
         self.main_window.selection_zoom.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        self.mode = AppMode.View
-
     @property
     def mode(self) -> AppMode:
         return self._mode
@@ -131,13 +131,20 @@ class GazeControlApp(QApplication):
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
-            raise NotImplementedError()
+            self.main_window.gaze_overlay.setVisible(False)
+            self.main_window.mode_menu.enabled = False
+            self.main_window.calibration_widget.start(
+                self.main_window.marker_overlay.markers
+            )
         else:
             raise ValueError(f"Unknown mode {value}")
 
     def _clear_mode_artefacts(self):
         self.main_window.keyboard.setVisible(False)
         self.main_window.selection_zoom.setVisible(False)
+        self.main_window.calibration_widget.stop()
+        self.main_window.gaze_overlay.setVisible(True)
+        self.main_window.mode_menu.enabled = True
 
     def save_settings(self):
         try:
@@ -309,6 +316,10 @@ class GazeControlApp(QApplication):
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
+        # TODO: is there a nicer way to implement this?
+        self.main_window.calibration_widget.map_to_scene_video = (
+            self.eye_tracking_provider.map_to_scene_video
+        )
 
     def on_mouse_click(self, pos: QPoint):
         pyautogui.click(pos.x(), pos.y())
@@ -385,7 +396,7 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 self.main_window.keyboard.update_data(eye_tracking_data.gaze)
         elif self.mode == AppMode.Calibrate:
-            pass
+            self.main_window.calibration_widget.update_data(eye_tracking_data)
 
     def exec(self):
         self.settings_window.show()
