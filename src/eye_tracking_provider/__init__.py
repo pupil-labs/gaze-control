@@ -139,9 +139,10 @@ class EyeTrackingProvider(RawDataReceiver):
 
 
 class DummyEyeTrackingProvider:
-    def __init__(self, markers, screen_size, use_calibrated_gaze):
+    def __init__(self, markers, screen_size):
         self.dwell_detector = DwellDetector()
         self.device = "dummy_device"
+        self.map_to_scene_video = None
 
     def receive(self) -> EyeTrackingData:
         import time
@@ -151,7 +152,7 @@ class DummyEyeTrackingProvider:
 
         p = pyautogui.position()
         # TODO: For some reason the resolution of the app is not actually equal to the screen resolution. You have to devide it by the primaryScreen.devicePixelRatio() to correctly place it.
-        p = p[0] / 1.25, p[1] / 1.25
+        p = p[0] - 100, p[1]
 
         dwell_process = self.dwell_detector.addPoint(p, ts)
 
@@ -162,7 +163,9 @@ class DummyEyeTrackingProvider:
             "", (object,), {"timestamp_unix_seconds": ts, "x": 500, "y": 500}
         )()
 
-        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene, raw_gaze)
+        eye_tracking_data = EyeTrackingData(
+            ts, p, [], dwell_process, scene, raw_gaze, None
+        )
 
         return eye_tracking_data
 
@@ -170,6 +173,9 @@ class DummyEyeTrackingProvider:
         return "dummy_ip", 1234
 
     def update_surface(self):
+        pass
+
+    def load_predictor(self):
         pass
 
     def close(self):
