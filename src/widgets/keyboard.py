@@ -10,6 +10,7 @@ class Keyboard(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
         self.enabled = True
         self.caps = False

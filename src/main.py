@@ -14,7 +14,7 @@ from widgets.action_settings_widget import ActionSettingsWidget
 
 from gaze_event_type import GazeEventType, TriggerEvent
 
-from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
 
 from encoder import create_property_dict
 from actions import (
@@ -42,7 +42,8 @@ class AppMode(Enum):
     Click = 1
     Zoom = 2
     Keyboard = 3
-    Calibrate = 4
+    Speak = 4
+    Calibrate = 5
 
 
 class GazeControlApp(QApplication):
@@ -184,6 +185,12 @@ class GazeControlApp(QApplication):
             pass
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
+        elif value == AppMode.Speak:
+            self.main_window.speak_panel.setVisible(True)
+            self.main_window.keyboard.setVisible(True)
+            self._set_window_transparency_for_input(False)
+            self.main_window.speak_panel.activateWindow()
+            self.main_window.speak_panel.text_edit.setFocus()
         elif value == AppMode.Calibrate:
             self.main_window.gaze_overlay.setVisible(False)
             self.main_window.mode_menu.enabled = False
@@ -194,11 +201,19 @@ class GazeControlApp(QApplication):
             raise ValueError(f"Unknown mode {value}")
 
     def _clear_mode_artefacts(self):
+        self._set_window_transparency_for_input(True)
         self.main_window.keyboard.setVisible(False)
         self.main_window.selection_zoom.setVisible(False)
         self.main_window.calibration_widget.stop()
         self.main_window.gaze_overlay.setVisible(True)
         self.main_window.mode_menu.enabled = True
+        self.main_window.speak_panel.setVisible(False)
+
+    def _set_window_transparency_for_input(self, value):
+        main_window_visible = self.main_window.isVisible()
+        self.main_window.setWindowFlag(Qt.WindowTransparentForInput, value)
+        if main_window_visible:
+            self.main_window.show()
 
     def _on_hotkey_pressed(self, action, key_combo):
         if action == "killswitch":

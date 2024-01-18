@@ -18,6 +18,7 @@ class CalibrationWidget(QWidget):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.calibration_step = None
         self.markers = None
 

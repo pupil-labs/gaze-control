@@ -12,6 +12,7 @@ from widgets.keyboard import Keyboard
 from widgets.selection_zoom import SelectionZoom
 from widgets.mode_menu import ModeMenu
 from widgets.calibration import CalibrationWidget
+from widgets.speak_panel import SpeakPanel
 
 
 class MainWindow(QWidget):
@@ -32,6 +33,7 @@ class MainWindow(QWidget):
         self.selection_zoom = SelectionZoom()
 
         self.keyboard = Keyboard(self)
+        self.speak_panel = SpeakPanel(self)
         self.calibration_widget = CalibrationWidget(self)
 
         self.mode_menu = ModeMenu(self)
@@ -64,6 +66,7 @@ class MainWindow(QWidget):
         self.marker_overlay.resize(self.size())
         self.gaze_overlay.resize(self.size())
         self.keyboard.setGeometry(0, self.height() / 2, self.width(), self.height() / 2)
+        self.speak_panel.setGeometry(0, 0, self.width(), self.height() / 2)
         self.calibration_widget.resize(self.size())
         self.mode_menu.setGeometry(
             0,

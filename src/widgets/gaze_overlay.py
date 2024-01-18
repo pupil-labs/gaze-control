@@ -6,6 +6,7 @@ from PySide6.QtWidgets import *
 class GazeOverlay(QWidget):
     def __init__(self):
         super().__init__()
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.gaze_circle_radius = 20.0
         self.gaze = None
         self.dwell_process = 0.0

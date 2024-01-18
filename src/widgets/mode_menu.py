@@ -12,6 +12,7 @@ class ModeMenu(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
         self.enabled = True
 
@@ -41,6 +42,11 @@ class ModeMenu(QWidget):
 
         btn = MenuButton("Keyboard")
         btn.clicked.connect(lambda: self.mode_changed.emit("Keyboard"))
+        layout.addWidget(btn)
+        self.buttons.append(btn)
+
+        btn = MenuButton("Speak")
+        btn.clicked.connect(lambda: self.mode_changed.emit("Speak"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 

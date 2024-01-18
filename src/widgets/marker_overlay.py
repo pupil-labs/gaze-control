@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget
 
 from eye_tracking_provider import Marker
 
+
 class MarkerOverlay(QWidget):
     changed = Signal()
     surface_changed = Signal()
@@ -14,6 +15,7 @@ class MarkerOverlay(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
         self.setLayout(QGridLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
