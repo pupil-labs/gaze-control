@@ -2,9 +2,9 @@ import time
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import *
-from PySide6.QtMultimedia import QSoundEffect
+
+from .gaze_button import GazeButton
 
 
 class ModeMenu(QWidget):
@@ -25,27 +25,27 @@ class ModeMenu(QWidget):
 
         self.buttons = []
 
-        btn = MenuButton("View")
+        btn = GazeButton("View")
         btn.clicked.connect(lambda: self.mode_changed.emit("View"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Click")
+        btn = GazeButton("Click")
         btn.clicked.connect(lambda: self.mode_changed.emit("Click"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Zoom")
+        btn = GazeButton("Zoom")
         btn.clicked.connect(lambda: self.mode_changed.emit("Zoom"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Keyboard")
+        btn = GazeButton("Keyboard")
         btn.clicked.connect(lambda: self.mode_changed.emit("Keyboard"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Speak")
+        btn = GazeButton("Speak")
         btn.clicked.connect(lambda: self.mode_changed.emit("Speak"))
         layout.addWidget(btn)
         self.buttons.append(btn)
@@ -87,26 +87,3 @@ class ModeMenu(QWidget):
                         self.lost_focus_at = None
 
         return mode_change
-
-
-class MenuButton(QPushButton):
-    def __init__(self, label, code=None):
-        self.code = code
-        if code is None:
-            self.code = label
-        super().__init__(label)
-        self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-        )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.key_sound = QSoundEffect()
-        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
-
-    def check_press(self, point):
-        point = self.mapFromGlobal(point)
-        if self.rect().contains(point):
-            self.key_sound.play()
-            self.clicked.emit()
-            return True
-        return False

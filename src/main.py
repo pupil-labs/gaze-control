@@ -481,6 +481,7 @@ class GazeControlApp(QApplication):
         elif self.mode == AppMode.Speak:
             if eye_tracking_data.dwell_process == 1.0:
                 self.main_window.keyboard.update_data(eye_tracking_data.gaze)
+            self.main_window.speak_panel.update_data(eye_tracking_data)
         elif self.mode == AppMode.Calibrate:
             self.main_window.calibration_widget.update_data(eye_tracking_data)
 
