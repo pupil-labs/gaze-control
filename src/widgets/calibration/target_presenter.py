@@ -40,19 +40,23 @@ class TargetPresenter(QWidget):
         self.target_color = None
 
     def update_data(self, eye_tracking_data):
+        if eye_tracking_data is None:
+            return
+
         self.target_location, self.target_color = self._current_target()
         if self.target_location is None:
             return
 
         if self.target_duration > self.target_acquisition_time:
             trans = eye_tracking_data.surf_to_img_trans
-            target_location_scene = None
-            if trans is not None:
-                t = (
-                    self.target_location.x(),
-                    self.target_location.y(),
-                )
-                target_location_scene = self.map_to_scene_video(t, trans)
+            if trans is None:
+                return
+
+            t = (
+                self.target_location.x(),
+                self.target_location.y(),
+            )
+            target_location_scene = self.map_to_scene_video(t, trans)
             self.collected_gaze_positions.append(eye_tracking_data.raw_gaze[:2])
             self.collected_target_locations.append(target_location_scene)
 
