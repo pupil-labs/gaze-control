@@ -14,6 +14,8 @@ The Neon Companion device and the computer running Gaze Control need to be in th
 
 Gaze Control is primarily developed and tested for **Windows 11**, but it also works on Windows 10 and MacOS. There are currently known issues when running on Linux.
 
+When running Windows, in the `Display` settings under `Scale & Layout`, the `Scale` value needs to be set to `100%`. This is not ideal as it might make UI elements smaller than desired, which makes it more difficult to interact with them and we will fix this in the future. For now, it's a requirement though.
+
 **Python 3.10+** is required.
 
 To be successful with Gaze Control, you need to use it with a sufficiently **large monitor**. We recommend ~24-26 inches.
@@ -101,20 +103,4 @@ Selecting one of the keys will trigger the corresponding key press in the curren
 
 While the keyboard is enabled, selecting things outside of the Gaze Control app is disabled. This means if you want to type inside of e.g. a text editor, you need to open the text editor first, position the cursor at the right location, and then enable the keyboard mode.
 
-<!--
-# Calibration
-If the gaze estimation results on the screen are insufficient in accuracy, you have the option to perform a calibration. To start a calibration execute the calibration program using the following command (the main Gaze Control app should not be running while calibrating):
-```bash
-python src/calibration.py
-```
-
-Similar to Gaze Control, this will open a main window as well as a debug window. The main window contains the same markers Gaze Control does, but it is not transparent.
-
-To start the calibration process hit the Enter key. A series of gaze targets will then be presented on the screen. Your task is to look at them continuously one after the other.
-
-Try not to blink while the target is green. It is fine to blink while a target is still red, so you can blink briefly between all targets.
-
-Once all targets have been presented and the calibration result will be saved in a file called `predictor.pkl`. The application will automatically close down after the calibration is finished.
-
-When you start Gaze Control again, it will automatically load the calibration result from the file and use it for improved gaze estimation.
--->
+When looking outside the screen towards the right of the keyboard, the keyboard will swap to a different page showing special characters. When looking outside the screen to the left of the keyboard, a page with capital letters will be shown.
