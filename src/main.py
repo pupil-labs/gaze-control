@@ -17,7 +17,7 @@ from encoder import create_property_dict
 import actions
 from gaze_event_type import GazeEventType
 
-# from hotkey_manager import HotkeyManager
+from hotkey_manager import HotkeyManager
 
 pyautogui.FAILSAFE = False
 
@@ -33,14 +33,14 @@ class GazeControlApp(QApplication):
             "on_surface_changed": self.on_surface_changed,
         }
 
-        # self.hotkey_manager = HotkeyManager()
-        # self.killswitch_key = QKeyCombination(
-        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
-        # )
-        # self.pause_switch_key = QKeyCombination(
-        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
-        # )
-        # self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
+        self.hotkey_manager = HotkeyManager()
+        self.killswitch_key = QKeyCombination(
+            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
+        )
+        self.pause_switch_key = QKeyCombination(
+            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
+        )
+        self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
 
@@ -104,49 +104,49 @@ class GazeControlApp(QApplication):
 
         self.pause_switch_active = False
 
-    # @property
-    # def killswitch_key(self) -> QKeyCombination:
-    #     """
-    #     :requires_modifier
-    #     """
-    #     return self.hotkey_manager.get_hotkey("killswitch")
+    @property
+    def killswitch_key(self) -> QKeyCombination:
+        """
+        :requires_modifier
+        """
+        return self.hotkey_manager.get_hotkey("killswitch")
 
-    # @killswitch_key.setter
-    # def killswitch_key(self, value):
-    #     if isinstance(value, str):
-    #         if value == "":
-    #             value = None
-    #         else:
-    #             value = QKeySequence.fromString(value)[0]
+    @killswitch_key.setter
+    def killswitch_key(self, value):
+        if isinstance(value, str):
+            if value == "":
+                value = None
+            else:
+                value = QKeySequence.fromString(value)[0]
 
-    #     self.hotkey_manager.set_hotkey("killswitch", value)
+        self.hotkey_manager.set_hotkey("killswitch", value)
 
-    #     self.save_settings()
+        self.save_settings()
 
-    # @property
-    # def pause_switch_key(self) -> QKeyCombination:
-    #     """
-    #     :requires_modifier
-    #     """
-    #     return self.hotkey_manager.get_hotkey("pause_switch")
+    @property
+    def pause_switch_key(self) -> QKeyCombination:
+        """
+        :requires_modifier
+        """
+        return self.hotkey_manager.get_hotkey("pause_switch")
 
-    # @pause_switch_key.setter
-    # def pause_switch_key(self, value):
-    #     if isinstance(value, str):
-    #         if value == "":
-    #             value = None
-    #         else:
-    #             value = QKeySequence.fromString(value)[0]
+    @pause_switch_key.setter
+    def pause_switch_key(self, value):
+        if isinstance(value, str):
+            if value == "":
+                value = None
+            else:
+                value = QKeySequence.fromString(value)[0]
 
-    #     self.hotkey_manager.set_hotkey("pause_switch", value)
+        self.hotkey_manager.set_hotkey("pause_switch", value)
 
-    #     self.save_settings()
+        self.save_settings()
 
-    # def _on_hotkey_pressed(self, action, key_combo):
-    #     if action == "killswitch":
-    #         self.quit()
-    #     elif action == "pause_switch":
-    #         self.pause_switch_active = not self.pause_switch_active
+    def _on_hotkey_pressed(self, action, key_combo):
+        if action == "killswitch":
+            self.quit()
+        elif action == "pause_switch":
+            self.pause_switch_active = not self.pause_switch_active
 
     def save_settings(self):
         try:
