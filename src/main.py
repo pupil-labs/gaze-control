@@ -260,6 +260,12 @@ class GazeControlApp(QApplication):
                 3000,
             )
 
+            self.debug_window.set_scene_calib(
+                self.eye_tracking_provider.K,
+                self.eye_tracking_provider.K_inv,
+                self.eye_tracking_provider.D,
+            )
+
             if not self.main_window.isVisible():
                 self.main_window.showMaximized()
             if not self.debug_window.isVisible():

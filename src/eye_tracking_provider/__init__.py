@@ -12,7 +12,15 @@ from .dwell_detector import DwellDetector
 
 EyeTrackingData = namedtuple(
     "EyeTrackingData",
-    ["timestamp", "gaze", "detected_markers", "dwell_process", "scene", "raw_gaze"],
+    [
+        "timestamp",
+        "gaze",
+        "detected_markers",
+        "dwell_process",
+        "scene",
+        "raw_gaze",
+        "markers",
+    ],
 )
 
 
@@ -21,6 +29,9 @@ class EyeTrackingProvider(RawDataReceiver):
         super().__init__()
         self.markers = markers
         self.screen_size = screen_size
+        self.K = None
+        self.K_inv = None
+        self.D = None
 
         self.predictor = None
         if use_calibrated_gaze and os.path.exists("predictor.pkl"):
@@ -38,6 +49,9 @@ class EyeTrackingProvider(RawDataReceiver):
         if result is None:
             return None
         else:
+            self.K = self.scene_calibration["scene_camera_matrix"][0]
+            self.K_inv = np.linalg.inv(self.K)
+            self.D = self.scene_calibration["scene_distortion_coefficients"][0]
             self.gazeMapper = GazeMapper(self.scene_calibration)
             self.update_surface()
             return result
@@ -74,6 +88,7 @@ class EyeTrackingProvider(RawDataReceiver):
             dwell_process,
             raw_data.scene,
             raw_data.raw_gaze,
+            detected_markers,
         )
 
         return eye_tracking_data
@@ -83,7 +98,6 @@ class EyeTrackingProvider(RawDataReceiver):
 
         result = self.gazeMapper.process_frame(frame, gaze)
 
-        detected_markers = [int(marker.uid.split(":")[-1]) for marker in result.markers]
         gaze = None
 
         if self.surface.uid in result.mapped_gaze:
@@ -94,7 +108,7 @@ class EyeTrackingProvider(RawDataReceiver):
                     (1 - gaze[1]) * self.screen_size[1],
                 )
 
-        return gaze, detected_markers
+        return gaze, result.markers
 
 
 class DummyEyeTrackingProvider:
