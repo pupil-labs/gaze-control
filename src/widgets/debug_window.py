@@ -15,12 +15,15 @@ class GazeView(ScaledImageView):
         self.gaze_circle_radius = 15.0
         self.gaze_point = None
         self.markers = None
+        self.surface_points = None
         self.overlay_color = QColor(255, 0, 0, 77)
         self.marker_color = QColor(0, 255, 0, 77)
+        self.surface_color = QColor(255, 0, 255, 200)
 
-    def update_data(self, gaze, markers):
+    def update_data(self, gaze, markers, surface_points):
         self.gaze_point = gaze
         self.markers = markers
+        self.surface_points = surface_points
         self.update()
 
     def paintEvent(self, event):
@@ -50,14 +53,21 @@ class GazeView(ScaledImageView):
                         polygon.append(p)
                     painter.drawPolygon(polygon)
 
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setPen(QPen(self.surface_color, 3))
+                painter.setBrush(Qt.NoBrush)
+                polygon = QPolygonF()
+                for p in self.surface_points:
+                    p = QPointF(*p) * scale + offset
+                    polygon.append(p)
+                painter.drawPolygon(polygon)
+
 
 class DebugWindow(QWidget):
-    def __init__(self):
+    def __init__(self, distort_point, map_surface_to_scene_video):
         super().__init__()
-        self.K = None
-        self.K_inv = None
-        self.D = None
-
+        self.distort_point = distort_point
+        self.map_surface_to_scene_video = map_surface_to_scene_video
         self.setLayout(QVBoxLayout())
 
         self.setWindowTitle("Debug Window - Scene Camera")
@@ -71,11 +81,6 @@ class DebugWindow(QWidget):
         self.info_widget.setText("Waiting for stream...")
         self.layout().addWidget(self.info_widget)
 
-    def set_scene_calib(self, K, K_inv, D):
-        self.K = K
-        self.K_inv = K_inv
-        self.D = D
-
     def update_data(self, data):
         if data is None:
             return
@@ -83,7 +88,7 @@ class DebugWindow(QWidget):
         markers = []
         for marker in data.markers:
             corners_undist = marker.as_dict()["vertices"].values()
-            corners_dist = [self._distort_point(p) for p in corners_undist]
+            corners_dist = [self.distort_point(p) for p in corners_undist]
             markers.append(corners_dist)
 
         image = qimage_from_frame(data.scene.bgr_pixels)
@@ -95,13 +100,17 @@ class DebugWindow(QWidget):
             self.info_widget.setText(
                 f"Connected to {device_info}. Gaze: {gaze_point.x(): 4d}, {gaze_point.y(): 4d}"
             )
-            self.gaze_view.update_data(gaze_point, markers)
 
-    def _distort_point(self, p):
-        p_hom = np.array([p[0], p[1], 1])
-        p_3d = self.K_inv @ p_hom
+            surface_points = []
+            if data.surf_to_img_trans is not None:
+                steps = np.linspace(0, 1, 10)
+                surf_border_points = [(0, s) for s in steps]
+                surf_border_points += [(s, 1) for s in steps]
+                surf_border_points += [(1, s) for s in steps[::-1]]
+                surf_border_points += [(s, 0) for s in steps[::-1]]
+                surface_points = [
+                    self.map_surface_to_scene_video(p, data.surf_to_img_trans)
+                    for p in surf_border_points
+                ]
 
-        p_dist = cv2.projectPoints(
-            p_3d.reshape(1, 1, 3), np.zeros(3), np.zeros(3), self.K, self.D
-        )[0].reshape(2)
-        return p_dist
+            self.gaze_view.update_data(gaze_point, markers, surface_points)

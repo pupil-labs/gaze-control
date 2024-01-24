@@ -1,5 +1,6 @@
 from collections import namedtuple
 import numpy as np
+import cv2
 import joblib
 import os
 
@@ -20,6 +21,7 @@ EyeTrackingData = namedtuple(
         "scene",
         "raw_gaze",
         "markers",
+        "surf_to_img_trans",
     ],
 )
 
@@ -72,7 +74,7 @@ class EyeTrackingProvider(RawDataReceiver):
         if raw_data is None:
             return None
 
-        mapped_gaze, detected_markers = self._map_gaze(
+        mapped_gaze, detected_markers, surf_to_img_trans = self._map_gaze(
             raw_data.scene, raw_data.raw_gaze
         )
 
@@ -89,6 +91,7 @@ class EyeTrackingProvider(RawDataReceiver):
             raw_data.scene,
             raw_data.raw_gaze,
             detected_markers,
+            surf_to_img_trans,
         )
 
         return eye_tracking_data
@@ -108,7 +111,32 @@ class EyeTrackingProvider(RawDataReceiver):
                     (1 - gaze[1]) * self.screen_size[1],
                 )
 
-        return gaze, result.markers
+        surf_to_img_trans = None
+        if result.located_aois[self.surface.uid] is not None:
+            surf_to_img_trans = result.located_aois[
+                self.surface.uid
+            ].transform_matrix_from_surface_to_image_undistorted
+
+        return gaze, result.markers, surf_to_img_trans
+
+    def distort_point(self, p):
+        p_hom = np.array([p[0], p[1], 1])
+        p_3d = self.K_inv @ p_hom
+
+        p_dist = cv2.projectPoints(
+            p_3d.reshape(1, 1, 3), np.zeros(3), np.zeros(3), self.K, self.D
+        )[0].reshape(2)
+        return p_dist
+
+    def map_surface_to_scene_video(self, surface_point, transform):
+        g_hom = np.array([surface_point[0], surface_point[1], 1])
+        g_scene_undist_hom = transform @ g_hom
+        g_scene_undist_3d = self.K_inv @ g_scene_undist_hom
+
+        g_scene_dist_2d = cv2.projectPoints(
+            g_scene_undist_3d.reshape(1, 1, 3), np.zeros(3), np.zeros(3), self.K, self.D
+        )[0].reshape(2)
+        return g_scene_dist_2d
 
 
 class DummyEyeTrackingProvider:
