@@ -82,7 +82,10 @@ class GazeControlApp(QApplication):
             self.main_window.modes["Zoom"].selection_zoom, "Zoom-clicking"
         )
 
-        self.debug_window = DebugWindow()
+        self.debug_window = DebugWindow(
+            self.eye_tracking_provider.distort_point,
+            self.eye_tracking_provider.map_surface_to_scene_video,
+        )
         self._build_tray_icon()
 
         self.poll_timer = QTimer()

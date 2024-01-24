@@ -1,5 +1,6 @@
 from collections import namedtuple
 import numpy as np
+import cv2
 import joblib
 import os
 
@@ -12,7 +13,16 @@ from .dwell_detector import DwellDetector
 
 EyeTrackingData = namedtuple(
     "EyeTrackingData",
-    ["timestamp", "gaze", "detected_markers", "dwell_process", "scene", "raw_gaze"],
+    [
+        "timestamp",
+        "gaze",
+        "detected_markers",
+        "dwell_process",
+        "scene",
+        "raw_gaze",
+        "markers",
+        "surf_to_img_trans",
+    ],
 )
 
 
@@ -21,6 +31,9 @@ class EyeTrackingProvider(RawDataReceiver):
         super().__init__()
         self.markers = markers
         self.screen_size = screen_size
+        self.K = None
+        self.K_inv = None
+        self.D = None
 
         self.predictor = None
         if use_calibrated_gaze and os.path.exists("predictor.pkl"):
@@ -38,6 +51,9 @@ class EyeTrackingProvider(RawDataReceiver):
         if result is None:
             return None
         else:
+            self.K = self.scene_calibration["scene_camera_matrix"][0]
+            self.K_inv = np.linalg.inv(self.K)
+            self.D = self.scene_calibration["scene_distortion_coefficients"][0]
             self.gazeMapper = GazeMapper(self.scene_calibration)
             self.update_surface()
             return result
@@ -58,7 +74,7 @@ class EyeTrackingProvider(RawDataReceiver):
         if raw_data is None:
             return None
 
-        mapped_gaze, detected_markers = self._map_gaze(
+        mapped_gaze, detected_markers, surf_to_img_trans = self._map_gaze(
             raw_data.scene, raw_data.raw_gaze
         )
 
@@ -74,6 +90,8 @@ class EyeTrackingProvider(RawDataReceiver):
             dwell_process,
             raw_data.scene,
             raw_data.raw_gaze,
+            detected_markers,
+            surf_to_img_trans,
         )
 
         return eye_tracking_data
@@ -83,7 +101,6 @@ class EyeTrackingProvider(RawDataReceiver):
 
         result = self.gazeMapper.process_frame(frame, gaze)
 
-        detected_markers = [int(marker.uid.split(":")[-1]) for marker in result.markers]
         gaze = None
 
         if self.surface.uid in result.mapped_gaze:
@@ -94,7 +111,32 @@ class EyeTrackingProvider(RawDataReceiver):
                     (1 - gaze[1]) * self.screen_size[1],
                 )
 
-        return gaze, detected_markers
+        surf_to_img_trans = None
+        if result.located_aois[self.surface.uid] is not None:
+            surf_to_img_trans = result.located_aois[
+                self.surface.uid
+            ].transform_matrix_from_surface_to_image_undistorted
+
+        return gaze, result.markers, surf_to_img_trans
+
+    def distort_point(self, p):
+        p_hom = np.array([p[0], p[1], 1])
+        p_3d = self.K_inv @ p_hom
+
+        p_dist = cv2.projectPoints(
+            p_3d.reshape(1, 1, 3), np.zeros(3), np.zeros(3), self.K, self.D
+        )[0].reshape(2)
+        return p_dist
+
+    def map_surface_to_scene_video(self, surface_point, transform):
+        g_hom = np.array([surface_point[0], surface_point[1], 1])
+        g_scene_undist_hom = transform @ g_hom
+        g_scene_undist_3d = self.K_inv @ g_scene_undist_hom
+
+        g_scene_dist_2d = cv2.projectPoints(
+            g_scene_undist_3d.reshape(1, 1, 3), np.zeros(3), np.zeros(3), self.K, self.D
+        )[0].reshape(2)
+        return g_scene_dist_2d
 
 
 class DummyEyeTrackingProvider:
