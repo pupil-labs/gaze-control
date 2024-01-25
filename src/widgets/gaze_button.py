@@ -1,5 +1,9 @@
+import math
+import numpy as np
+
 from PySide6.QtCore import *
 from PySide6.QtGui import *
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import *
 from PySide6.QtMultimedia import QSoundEffect
 
@@ -20,12 +24,17 @@ class GazeButton(QPushButton):
     clicked = Signal(str)
 
     def __init__(
-        self, label, code=None, regular_style=ButtonStyle(), hover_style=ButtonStyle()
+        self,
+        label,
+        code=None,
+        regular_style=ButtonStyle(),
+        hover_style=ButtonStyle(),
+        parent=None,
     ):
         self.code = code
         if code is None:
             self.code = label
-        super().__init__(label)
+        super().__init__(label, parent)
 
         self.regular_style = regular_style
         self.hover_style = hover_style
@@ -75,3 +84,56 @@ class GazeButton(QPushButton):
         else:
             self.hover = False
             self.setStyleSheet(self.regular_style.to_css())
+
+    def _get_hexagon_points(self):
+        """Return the points of a hexagon with unit square bounds and the top left corner at (0,0)."""
+        points = [
+            (1, 0),
+            (1 / 2, math.sqrt(3) / 2),
+            (-1 / 2, math.sqrt(3) / 2),
+            (-1, 0),
+            (-1 / 2, -math.sqrt(3) / 2),
+            (1 / 2, -math.sqrt(3) / 2),
+        ]
+
+        def rotate(origin, point, angle):
+            """
+            Rotate a point counterclockwise by a given angle around a given origin.
+
+            The angle should be given in radians.
+            """
+            ox, oy = origin
+            px, py = point
+
+            qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+            qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+            return qx, qy
+
+        points = np.array([rotate((0, 0), p, math.pi / 2) for p in points])
+        points[:, 0] /= math.sqrt(3) / 2
+
+        points[:, 0] += 1
+        points[:, 1] += 1
+        points /= 2
+
+        return points
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        width = event.size().width()
+        height = event.size().height()
+
+        points = self._get_hexagon_points()
+
+        padding = 0.01
+        points[:, 0] *= width * (1 - padding * 2)
+        points[:, 1] *= height * (1 - padding * 2)
+        points[:, 0] += width * padding
+        points[:, 1] += height * padding
+
+        polygon = QPolygon()
+        for p in points:
+            p = QPoint(*p)
+            polygon.append(p)
+        region = QRegion(polygon)
+        self.setMask(region)
+        return super().resizeEvent(event)
