@@ -1,9 +1,11 @@
 import itertools
+import time
 from .app_mode import AppMode
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
+from PySide6.QtMultimedia import QSoundEffect
 
 from eye_tracking_provider import EyeTrackingData
 
@@ -48,6 +50,8 @@ class Keyboard(QWidget):
         super().__init__(parent)
 
         self.caps = False
+        self.page_change_sound = QSoundEffect()
+        self.page_change_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
         layout = QGridLayout()
         layout.setSpacing(0)
@@ -58,6 +62,7 @@ class Keyboard(QWidget):
         for i in range(6):
             layout.setRowStretch(i, 1)
 
+        self.last_page_change_ts = 0
         self.pages = {}
         self.pages[Page.LETTERS] = self._generate_letters_page(layout)
         self.pages[Page.CAPS] = self._generate_letters_page(layout, caps=True)
@@ -153,6 +158,11 @@ class Keyboard(QWidget):
         )
 
     def _set_page(self, value: Page):
+        if time.time() - self.last_page_change_ts < 1.5:
+            return
+        self.last_page_change_ts = time.time()
+        self.page_change_sound.play()
+
         self.current_page = value
         for page, keys in self.pages.items():
             if page == value:

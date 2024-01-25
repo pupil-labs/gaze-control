@@ -9,7 +9,6 @@ if sys.platform == "win32":
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
-from PySide6.QtMultimedia import QSoundEffect
 
 import pyautogui
 
@@ -253,11 +252,8 @@ class KeyPressAction(Action):
     def __init__(self, key_code) -> None:
         super().__init__()
         self.key_code = key_code
-        self.key_sound = QSoundEffect()
-        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
     def execute(self, _):
-        self.key_sound.play()
         self.key_pressed.emit(self.key_code)
 
 
