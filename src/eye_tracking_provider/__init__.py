@@ -5,6 +5,7 @@ import joblib
 import os
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
+from pupil_labs.realtime_api import GazeData
 
 from .raw_data_receiver import RawDataReceiver
 from .marker import Marker
@@ -151,19 +152,18 @@ class DummyEyeTrackingProvider:
         ts = time.time()
 
         p = pyautogui.position()
-        # TODO: For some reason the resolution of the app is not actually equal to the screen resolution. You have to devide it by the primaryScreen.devicePixelRatio() to correctly place it.
-        p = p[0] / 1.25, p[1] / 1.25
+        p = p[0] - 200, p[1]
 
         dwell_process = self.dwell_detector.addPoint(p, ts)
 
         scene_img = np.zeros((1600, 1200, 3), dtype=np.uint8)
         scene = type("", (object,), {"bgr_pixels": scene_img})()
 
-        raw_gaze = type(
-            "", (object,), {"timestamp_unix_seconds": ts, "x": 500, "y": 500}
-        )()
+        raw_gaze = GazeData(500, 500, True, ts)
 
-        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene, raw_gaze)
+        eye_tracking_data = EyeTrackingData(
+            ts, p, [], dwell_process, scene, raw_gaze, [], None
+        )
 
         return eye_tracking_data
 
@@ -171,6 +171,12 @@ class DummyEyeTrackingProvider:
         return "dummy_ip", 1234
 
     def update_surface(self):
+        pass
+
+    def distort_point(self, p):
+        pass
+
+    def map_surface_to_scene_video(self, surface_point, transform):
         pass
 
     def close(self):
