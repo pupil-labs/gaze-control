@@ -58,8 +58,8 @@ class Keyboard(QWidget):
         key_codes = [*qwerty] + ["space"]
         self.pages[Page.LETTERS] = self._create_page(
             key_codes,
-            ButtonStyle(),
             ButtonStyle(background_color="lightgray"),
+            ButtonStyle(background_color="white"),
         )
         key_codes = [*qwerty.upper()] + ["space"]
         self.pages[Page.CAPS] = self._create_page(
