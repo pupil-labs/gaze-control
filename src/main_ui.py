@@ -28,6 +28,7 @@ class MainWindow(QWidget):
             "Click": app_modes.ClickMode(self, event_handlers),
             "Zoom": app_modes.ZoomMode(self, event_handlers),
             "Keyboard": app_modes.KeyboardMode(self, event_handlers),
+            "Speaker": app_modes.SpeakerMode(self, event_handlers),
         }
         self.current_mode = self.modes["View"]
 

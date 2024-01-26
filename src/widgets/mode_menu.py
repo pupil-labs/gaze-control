@@ -45,6 +45,11 @@ class ModeMenu(QWidget):
         layout.addWidget(btn)
         self.buttons.append(btn)
 
+        btn = GazeButton("Speaker")
+        btn.clicked.connect(lambda: self.mode_changed.emit("Speaker"))
+        layout.addWidget(btn)
+        self.buttons.append(btn)
+
         self.setLayout(layout)
 
         self.mode_change = False

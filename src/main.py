@@ -10,7 +10,6 @@ from main_ui import MainWindow
 from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
 
-
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 from encoder import create_property_dict
