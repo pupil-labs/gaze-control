@@ -174,9 +174,10 @@ class Keyboard(QWidget):
             self._set_page(Page.SPECIAL)
 
     def paintEvent(self, event: QPaintEvent) -> None:
-        with QPainter(self) as painter:
-            painter.setBrush(Qt.gray)
-            painter.drawRect(self.rect())
+        if self.opacity == 1.0:
+            with QPainter(self) as painter:
+                painter.setBrush(Qt.gray)
+                painter.drawRect(self.rect())
 
         return super().paintEvent(event)
 

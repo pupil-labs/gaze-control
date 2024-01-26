@@ -13,7 +13,7 @@ from widgets.gaze_button import GazeButton
 class ModeMenu(QWidget):
     mode_changed = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, modes=[]):
         super().__init__(parent)
 
         self.disappear_timeout = 3.0
@@ -25,30 +25,11 @@ class ModeMenu(QWidget):
 
         self.buttons = []
 
-        btn = GazeButton("View")
-        btn.clicked.connect(lambda: self.mode_changed.emit("View"))
-        layout.addWidget(btn)
-        self.buttons.append(btn)
-
-        btn = GazeButton("Click")
-        btn.clicked.connect(lambda: self.mode_changed.emit("Click"))
-        layout.addWidget(btn)
-        self.buttons.append(btn)
-
-        btn = GazeButton("Zoom")
-        btn.clicked.connect(lambda: self.mode_changed.emit("Zoom"))
-        layout.addWidget(btn)
-        self.buttons.append(btn)
-
-        btn = GazeButton("Keyboard")
-        btn.clicked.connect(lambda: self.mode_changed.emit("Keyboard"))
-        layout.addWidget(btn)
-        self.buttons.append(btn)
-
-        btn = GazeButton("Speaker")
-        btn.clicked.connect(lambda: self.mode_changed.emit("Speaker"))
-        layout.addWidget(btn)
-        self.buttons.append(btn)
+        for mode in modes:
+            btn = GazeButton(mode)
+            btn.clicked.connect(lambda mode=mode: self.mode_changed.emit(mode))
+            layout.addWidget(btn)
+            self.buttons.append(btn)
 
         self.setLayout(layout)
 

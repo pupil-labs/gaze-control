@@ -238,11 +238,12 @@ class ToggleDebugWindowAction(Action):
         QApplication.instance().toggle_debug_window()
 
 
-class ShowModeMenuAction(Action):
-    friendly_name = "Show Mode Menu"
+class SignalAction(Action):
+    friendly_name = "Signal Action"
+    action_triggered = Signal()
 
     def execute(self, trigger_event):
-        QApplication.instance().main_window.mode_menu.setVisible(True)
+        self.action_triggered.emit()
 
 
 class KeyPressAction(Action):
