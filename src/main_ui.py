@@ -28,13 +28,16 @@ class MainWindow(QWidget):
             "Click": app_modes.ClickMode(self, event_handlers),
             "Zoom": app_modes.ZoomMode(self, event_handlers),
             "Keyboard": app_modes.KeyboardMode(self, event_handlers),
+            "Speaker": app_modes.SpeakerMode(self, event_handlers),
         }
         self.current_mode = self.modes["View"]
 
         self.marker_overlay = MarkerOverlay(self)
-        self.mode_menu = ModeMenu(self)
 
-        self.mode_menu.mode_changed.connect(self._switch_modes)
+        self.mode_menu_left = ModeMenu(self, ["View", "Click", "Zoom", "Keyboard"])
+        self.mode_menu_left.mode_changed.connect(self._switch_modes)
+        self.mode_menu_right = ModeMenu(self, ["Speaker"])
+        self.mode_menu_right.mode_changed.connect(self._switch_modes)
 
         self.current_mode.activate()
 
@@ -54,8 +57,14 @@ class MainWindow(QWidget):
             mode.resize(self.size())
 
         self.marker_overlay.resize(self.size())
-        self.mode_menu.setGeometry(
+        self.mode_menu_left.setGeometry(
             0,
+            self.height() * 0.2,
+            self.width() * 0.1,
+            self.height() * 0.6,
+        )
+        self.mode_menu_right.setGeometry(
+            self.width() * 0.9,
             self.height() * 0.2,
             self.width() * 0.1,
             self.height() * 0.6,

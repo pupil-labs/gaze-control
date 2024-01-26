@@ -58,11 +58,21 @@ class GazeControlApp(QApplication):
 
         edge_action_configs = []
         a_config = actions.EdgeActionConfig()
-        a = actions.ShowModeMenuAction()
+        a = actions.SignalAction()
+        a.action_triggered.connect(self.main_window.mode_menu_left.show)
         a_config.action = a
         a_config.event = GazeEventType.GAZE_ENTER
         a_config.screen_edge = actions.ScreenEdge.LEFT_MIDDLE
         edge_action_configs.append(a_config)
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.SignalAction()
+        a.action_triggered.connect(self.main_window.mode_menu_right.show)
+        a_config.action = a
+        a_config.event = GazeEventType.GAZE_ENTER
+        a_config.screen_edge = actions.ScreenEdge.RIGHT_MIDDLE
+        edge_action_configs.append(a_config)
+
         self.edge_action_handler = actions.EdgeActionHandler(
             self.primaryScreen(), edge_action_configs
         )
@@ -287,8 +297,12 @@ class GazeControlApp(QApplication):
         self.debug_window.update_data(eye_tracking_data)
 
         self.edge_action_handler.update_data(eye_tracking_data)
-        self.main_window.mode_menu.update_data(eye_tracking_data)
-        mode_change = self.main_window.mode_menu.mode_change
+        self.main_window.mode_menu_left.update_data(eye_tracking_data)
+        self.main_window.mode_menu_right.update_data(eye_tracking_data)
+        mode_change = (
+            self.main_window.mode_menu_left.mode_change
+            or self.main_window.mode_menu_right.mode_change
+        )
         if not mode_change and not self.pause_switch_active:
             self.main_window.update_data(eye_tracking_data)
 
