@@ -8,3 +8,4 @@ scene_camera.json
 *.npy
 *.pkl
 calib_backup/
+.env
