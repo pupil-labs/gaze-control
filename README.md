@@ -34,6 +34,12 @@ cd gaze-control/
 pip install -r requirements.txt
 ```
 
+### Windows
+On Windows additional dependencies are required. To install them, run the following command:
+```bash
+pip install -r requirements-windows.txt
+```
+
 ### Ubuntu
 If you are running this on Ubuntu you also need to install the following:
 ```bash
