@@ -2,10 +2,6 @@ import sys
 from enum import Enum, auto
 from PySide6.QtCore import QObject
 
-if sys.platform == "win32":
-    import win32api
-    import win32con
-
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
