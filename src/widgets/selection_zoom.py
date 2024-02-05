@@ -2,12 +2,6 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-import mss
-
-from image_conversion import qimage_from_frame
-
-import numpy as np
-
 
 class SelectionZoom(QWidget):
     changed = Signal()
@@ -21,8 +15,6 @@ class SelectionZoom(QWidget):
 
         self.setWindowFlag(Qt.ToolTip)  # bordless fullscreen
         self.setWindowFlag(Qt.WindowTransparentForInput)
-
-        self.mss = mss.mss()
 
         self.zoom_center = QPoint(0, 0)
         self.screenshot = None
@@ -179,7 +171,7 @@ class SelectionZoom(QWidget):
 
         with QPainter(self) as painter:
             painter.fillRect(self.rect(), Qt.black)
-            painter.drawImage(target, self.screenshot)
+            painter.drawPixmap(target, self.screenshot)
 
             # Render the main window here for the tags and gaze overlay
             QApplication.instance().main_window.render_as_overlay(painter)
@@ -226,10 +218,9 @@ class SelectionZoom(QWidget):
 
     def _take_snapshot(self):
         app = QApplication.instance()
-        screenshot = self.mss.grab(self.mss.monitors[1])
-        self.screenshot = qimage_from_frame(np.array(screenshot), QImage.Format_RGB32)
-
-        self.setGeometry(QApplication.instance().primaryScreen().geometry())
+        screen = app.main_window.screen()
+        self.screenshot = screen.grabWindow()
+        self.setGeometry(screen.geometry())
 
         self.show()
         self.zoom_in_sequence.start()
