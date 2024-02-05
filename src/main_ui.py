@@ -4,6 +4,7 @@ from PySide6.QtWidgets import *
 
 from widgets.marker_overlay import MarkerOverlay
 from widgets.mode_menu import ModeMenu
+from widgets.mode_menu_permanent import ModeMenuPermanent
 
 from widgets import app_modes
 
@@ -32,12 +33,17 @@ class MainWindow(QWidget):
         }
         self.current_mode = self.modes["View"]
 
-        self.marker_overlay = MarkerOverlay(self)
-
         self.mode_menu_left = ModeMenu(self, ["View", "Click", "Zoom", "Keyboard"])
         self.mode_menu_left.mode_changed.connect(self._switch_modes)
         self.mode_menu_right = ModeMenu(self, ["Speaker"])
         self.mode_menu_right.mode_changed.connect(self._switch_modes)
+
+        self.mode_menu_permanent = ModeMenuPermanent(
+            self, ["View", "Click", "Zoom", "Keyboard", "Speaker"]
+        )
+        self.mode_menu_permanent.mode_changed.connect(self._switch_modes)
+
+        self.marker_overlay = MarkerOverlay(self)
 
         self.current_mode.activate()
 
@@ -68,6 +74,13 @@ class MainWindow(QWidget):
             self.height() * 0.2,
             self.width() * 0.1,
             self.height() * 0.6,
+        )
+        height_ratio = 0.65
+        self.mode_menu_permanent.setGeometry(
+            0,
+            self.height() * (1 - height_ratio),
+            self.width(),
+            self.height() * height_ratio,
         )
 
     def render_as_overlay(self, painter):

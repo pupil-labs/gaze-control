@@ -299,9 +299,11 @@ class GazeControlApp(QApplication):
         self.edge_action_handler.update_data(eye_tracking_data)
         self.main_window.mode_menu_left.update_data(eye_tracking_data)
         self.main_window.mode_menu_right.update_data(eye_tracking_data)
+        self.main_window.mode_menu_permanent.update_data(eye_tracking_data)
         mode_change = (
             self.main_window.mode_menu_left.mode_change
             or self.main_window.mode_menu_right.mode_change
+            or self.main_window.mode_menu_permanent.mode_change
         )
         if not mode_change and not self.pause_switch_active:
             self.main_window.update_data(eye_tracking_data)

@@ -35,16 +35,37 @@ class Keyboard(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        for i in range(20):
+        self.n_rows = 4
+        self.n_cols = 10
+        for i in range(self.n_cols):
             layout.setColumnStretch(i, 1)
-        for i in range(6):
+        for i in range(self.n_rows):
             layout.setRowStretch(i, 1)
 
         self.last_page_change_ts = 0
         self.pages = {}
-        self.pages[Page.LETTERS] = self._generate_letters_page(layout)
-        self.pages[Page.CAPS] = self._generate_letters_page(layout, caps=True)
-        self.pages[Page.SPECIAL] = self._generate_special_page(layout)
+
+        qwerty = "qwertyuiopasdfghjklzxcvbnm"
+        key_codes = [*qwerty] + ["space", "backspace"]
+        regular_style = ButtonStyle(background_color="white")
+        hover_style = ButtonStyle(background_color="lightgray")
+        self.pages[Page.LETTERS] = self._generate_page(
+            layout, key_codes, regular_style, hover_style
+        )
+
+        key_codes = [*qwerty.upper()] + ["space", "backspace"]
+        regular_style = ButtonStyle(background_color="#FFCCCB")
+        hover_style = ButtonStyle(background_color="white")
+        self.pages[Page.CAPS] = self._generate_page(
+            layout, key_codes, regular_style, hover_style
+        )
+
+        key_codes = [*"1234567890-+=@#$%^*()_!?,."] + ["enter"]
+        regular_style = ButtonStyle(background_color="lightblue")
+        hover_style = ButtonStyle(background_color="white")
+        self.pages[Page.SPECIAL] = self._generate_page(
+            layout, key_codes, regular_style, hover_style
+        )
         self._set_page(Page.LETTERS, sound=False)
 
         self.keys = list(itertools.chain.from_iterable(self.pages.values()))
@@ -59,54 +80,17 @@ class Keyboard(QWidget):
             self.setGraphicsEffect(op)
             self.setAutoFillBackground(True)
 
-    def _generate_letters_page(self, layout, caps=False):
-        qwerty = "qwertyuiopasdfghjklzxcvbnm"
-        if caps:
-            qwerty = qwerty.upper()
-
-        key_codes = [*qwerty] + ["space"]
-
-        if caps:
-            regular_style = ButtonStyle(background_color="#FFCCCB")
-            hover_style = ButtonStyle(background_color="white")
-        else:
-            regular_style = ButtonStyle()
-            hover_style = ButtonStyle(background_color="lightgray")
-
-        row_idx = 0
-        col_idx = 0
+    def _generate_page(self, layout, codes, regular_style, hover_style):
         keys = []
-        for idx, key in enumerate(key_codes):
-            if idx in [10, 19]:
-                row_idx += 1
-                col_idx = 0
-            k = Key(key, regular_style=regular_style, hover_style=hover_style)
+        for idx, key in enumerate(codes):
+            row_idx = idx // self.n_cols
+            col_idx = idx % self.n_cols
+            if row_idx == 2:
+                col_idx += 1
+
+            k = GazeButton(key, regular_style=regular_style, hover_style=hover_style)
             keys.append(k)
-            layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
-            col_idx += 1
-
-        for key in keys:
-            key.clicked.connect(lambda v: self.keyPressed.emit(v))
-
-        return keys
-
-    def _generate_special_page(self, layout):
-        key_codes = [*"1234567890-=!@#$%^*()_+,."] + ["backspace", "enter"]
-        regular_style = ButtonStyle(background_color="lightblue")
-        hover_style = ButtonStyle(background_color="white")
-
-        keys = []
-        row_idx = 0
-        col_idx = 0
-        keys = []
-        for idx, key in enumerate(key_codes):
-            if idx in [10, 19]:
-                row_idx += 1
-                col_idx = 0
-            k = Key(key, regular_style=regular_style, hover_style=hover_style)
-            keys.append(k)
-            layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
-            col_idx += 1
+            layout.addWidget(k, row_idx, col_idx, 1, 1)
 
         for key in keys:
             key.clicked.connect(lambda v: self.keyPressed.emit(v))
@@ -180,13 +164,3 @@ class Keyboard(QWidget):
                 painter.drawRect(self.rect())
 
         return super().paintEvent(event)
-
-
-class Key(GazeButton):
-    def toggleCaps(self):
-        if self.text().isupper():
-            self.setText(self.text().lower())
-            self.code = self.code.lower()
-        else:
-            self.setText(self.text().upper())
-            self.code = self.code.upper()
