@@ -100,21 +100,21 @@ class Keyboard(QWidget):
     def _setup_edge_actions(self):
         edge_action_configs = []
 
-        a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction("page")
-        a_config.action = a
-        a_config.event = GazeEventType.GAZE_ENTER
-        a_config.screen_edge = actions.ScreenEdge.RIGHT_BOTTOM
-        edge_action_configs.append(a_config)
-        a.key_pressed.connect(self._toggle_special)
+        # a_config = actions.EdgeActionConfig()
+        # a = actions.KeyPressAction("page")
+        # a_config.action = a
+        # a_config.event = GazeEventType.GAZE_ENTER
+        # a_config.screen_edge = actions.ScreenEdge.RIGHT_BOTTOM
+        # edge_action_configs.append(a_config)
+        # a.key_pressed.connect(self._toggle_special)
 
-        a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction("caps")
-        a_config.action = a
-        a_config.event = GazeEventType.GAZE_ENTER
-        a_config.screen_edge = actions.ScreenEdge.LEFT_BOTTOM
-        edge_action_configs.append(a_config)
-        a.key_pressed.connect(self._toggle_caps)
+        # a_config = actions.EdgeActionConfig()
+        # a = actions.KeyPressAction("caps")
+        # a_config.action = a
+        # a_config.event = GazeEventType.GAZE_ENTER
+        # a_config.screen_edge = actions.ScreenEdge.LEFT_BOTTOM
+        # edge_action_configs.append(a_config)
+        # a.key_pressed.connect(self._toggle_caps)
 
         self.edge_action_handler = actions.EdgeActionHandler(
             QApplication.primaryScreen(), edge_action_configs
