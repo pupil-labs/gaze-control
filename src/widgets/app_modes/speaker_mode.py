@@ -80,6 +80,11 @@ class SpeakerMode(AppMode):
             self.show()
 
     def _update_data(self, eye_tracking_data: EyeTrackingData):
+        if eye_tracking_data is None:
+            return
+        if eye_tracking_data.gaze is None:
+            return
+
         self.speak_btn.update_data(eye_tracking_data)
         self.reset_btn.update_data(eye_tracking_data)
         self.keyboard.update_data(eye_tracking_data)
