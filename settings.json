@@ -1,11 +1,14 @@
 {
-    "main": {},
+    "main": {
+        "killswitch_key": null,
+        "pause_switch_key": null
+    },
     "marker_overlay": {
         "marker_brightness": 255.0,
         "marker_size": 246
     },
     "dwell_detector": {
-        "dwell_time": 0.75,
+        "dwell_time": 0.58,
         "range": 75,
         "refractory_period": 0.0
     },

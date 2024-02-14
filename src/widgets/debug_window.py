@@ -7,6 +7,7 @@ from PySide6.QtWidgets import *
 
 from .scaled_image_view import ScaledImageView
 from image_conversion import qimage_from_frame
+from eye_tracking_provider import EyeTrackingData
 
 
 class GazeView(ScaledImageView):
@@ -14,15 +15,12 @@ class GazeView(ScaledImageView):
         super().__init__()
         self.gaze_circle_radius = 15.0
         self.gaze_point = None
-        self.markers = None
         self.surface_points = None
         self.overlay_color = QColor(255, 0, 0, 77)
-        self.marker_color = QColor(0, 255, 0, 77)
         self.surface_color = QColor(255, 0, 255, 200)
 
-    def update_data(self, gaze, markers, surface_points):
+    def update_data(self, gaze, surface_points):
         self.gaze_point = gaze
-        self.markers = markers
         self.surface_points = surface_points
         self.update()
 
@@ -44,14 +42,6 @@ class GazeView(ScaledImageView):
                     self.gaze_circle_radius,
                     self.gaze_circle_radius,
                 )
-
-                painter.setBrush(self.marker_color)
-                for marker in self.markers:
-                    polygon = QPolygonF()
-                    for x, y in marker:
-                        p = QPointF(x, y) * scale + offset
-                        polygon.append(p)
-                    painter.drawPolygon(polygon)
 
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setPen(QPen(self.surface_color, 3))
@@ -81,15 +71,9 @@ class DebugWindow(QWidget):
         self.info_widget.setText("Waiting for stream...")
         self.layout().addWidget(self.info_widget)
 
-    def update_data(self, data):
+    def update_data(self, data: EyeTrackingData):
         if data is None:
             return
-
-        markers = []
-        for marker in data.markers:
-            corners_undist = marker.as_dict()["vertices"].values()
-            corners_dist = [self.distort_point(p) for p in corners_undist]
-            markers.append(corners_dist)
 
         image = qimage_from_frame(data.scene.bgr_pixels)
         self.gaze_view.set_image(image)
@@ -103,14 +87,15 @@ class DebugWindow(QWidget):
 
             surface_points = []
             if data.surf_to_img_trans is not None:
-                steps = np.linspace(0, 1, 10)
-                surf_border_points = [(0, s) for s in steps]
-                surf_border_points += [(s, 1) for s in steps]
-                surf_border_points += [(1, s) for s in steps[::-1]]
-                surf_border_points += [(s, 0) for s in steps[::-1]]
+                h_steps = np.linspace(0, 1600, 10)
+                v_steps = np.linspace(0, 1200, 10)
+                surf_border_points = [(0, s) for s in v_steps]
+                surf_border_points += [(s, 1) for s in h_steps]
+                surf_border_points += [(1, s) for s in v_steps[::-1]]
+                surf_border_points += [(s, 0) for s in h_steps[::-1]]
                 surface_points = [
                     self.map_surface_to_scene_video(p, data.surf_to_img_trans)
                     for p in surf_border_points
                 ]
 
-            self.gaze_view.update_data(gaze_point, markers, surface_points)
+            self.gaze_view.update_data(gaze_point, surface_points)

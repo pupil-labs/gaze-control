@@ -9,6 +9,7 @@ import pyautogui
 from main_ui import MainWindow
 from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
+from widgets.screenshot_window import ScreenshotWindow
 
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
@@ -30,7 +31,6 @@ class GazeControlApp(QApplication):
             "on_key_pressed": self.on_key_pressed,
             "on_mouse_click": self.on_mouse_click,
             "on_mouse_move": self.on_mouse_move,
-            "on_surface_changed": self.on_surface_changed,
         }
 
         self.hotkey_manager = HotkeyManager()
@@ -46,8 +46,6 @@ class GazeControlApp(QApplication):
 
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(event_handlers)
-        self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
-        self.main_window.surface_changed.connect(self.on_surface_changed)
         self.main_window.setScreen(self.primaryScreen())
 
         self.eye_tracking_provider = EyeTrackingProvider(
@@ -116,6 +114,8 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
         self.pause_switch_active = False
+
+        self.screenshot_window = ScreenshotWindow()
 
     @property
     def killswitch_key(self) -> QKeyCombination:
@@ -280,9 +280,6 @@ class GazeControlApp(QApplication):
 
             return True
 
-    def on_surface_changed(self):
-        self.eye_tracking_provider.update_surface()
-
     def on_mouse_click(self, pos: QPoint):
         pyautogui.click(pos.x(), pos.y())
 
@@ -295,6 +292,7 @@ class GazeControlApp(QApplication):
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
         self.debug_window.update_data(eye_tracking_data)
+        self.screenshot_window.update_data()
 
         self.edge_action_handler.update_data(eye_tracking_data)
         self.main_window.mode_menu_left.update_data(eye_tracking_data)
@@ -310,6 +308,7 @@ class GazeControlApp(QApplication):
 
     def exec(self):
         self.settings_window.show()
+        self.screenshot_window.show()
 
         super().exec()
         self.eye_tracking_provider.close()

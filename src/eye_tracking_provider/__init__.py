@@ -4,6 +4,10 @@ import cv2
 import joblib
 import os
 
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 from pupil_labs.realtime_api import GazeData
 
@@ -17,14 +21,24 @@ EyeTrackingData = namedtuple(
     [
         "timestamp",
         "gaze",
-        "detected_markers",
         "dwell_process",
         "scene",
         "raw_gaze",
-        "markers",
         "surf_to_img_trans",
     ],
 )
+
+
+def pixmap2array(pixmap):
+    qimage = pixmap.toImage()
+    qimage = qimage.convertToFormat(QImage.Format_RGB888)
+    array = np.ndarray(
+        (qimage.height(), qimage.width(), 3),
+        buffer=qimage.constBits(),
+        strides=[qimage.bytesPerLine(), 3, 1],
+        dtype=np.uint8,
+    )
+    return array
 
 
 class EyeTrackingProvider(RawDataReceiver):
@@ -42,8 +56,6 @@ class EyeTrackingProvider(RawDataReceiver):
         else:
             print("No predictor found. Providing uncorrected gaze.")
 
-        self.surface = None
-        self.gazeMapper = None
         self.dwell_detector = DwellDetector()
 
     def connect(self, auto_discover=False, ip=None, port=None):
@@ -55,19 +67,7 @@ class EyeTrackingProvider(RawDataReceiver):
             self.K = self.scene_calibration["scene_camera_matrix"][0]
             self.K_inv = np.linalg.inv(self.K)
             self.D = self.scene_calibration["scene_distortion_coefficients"][0]
-            self.gazeMapper = GazeMapper(self.scene_calibration)
-            self.update_surface()
             return result
-
-    def update_surface(self):
-        if self.gazeMapper is None:
-            return
-
-        self.gazeMapper.clear_surfaces()
-        verts = {
-            i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
-        }
-        self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
     def receive(self) -> EyeTrackingData:
         raw_data = super().receive()
@@ -75,7 +75,7 @@ class EyeTrackingProvider(RawDataReceiver):
         if raw_data is None:
             return None
 
-        mapped_gaze, detected_markers, surf_to_img_trans = self._map_gaze(
+        mapped_gaze, surf_to_img_trans = self._map_gaze(
             raw_data.scene, raw_data.raw_gaze
         )
 
@@ -87,38 +87,64 @@ class EyeTrackingProvider(RawDataReceiver):
         eye_tracking_data = EyeTrackingData(
             raw_data.timestamp,
             mapped_gaze,
-            detected_markers,
             dwell_process,
             raw_data.scene,
             raw_data.raw_gaze,
-            detected_markers,
             surf_to_img_trans,
         )
 
         return eye_tracking_data
 
     def _map_gaze(self, frame, gaze):
-        assert self.surface is not None
+        app = QApplication.instance()
+        screen = app.main_window.screen()
+        screen_image = screen.grabWindow()
+        screen_image = pixmap2array(screen_image)
 
-        result = self.gazeMapper.process_frame(frame, gaze)
+        screen_image = cv2.resize(screen_image, None, fx=0.25, fy=0.25)
 
-        gaze = None
+        scene_image = frame.bgr_pixels
+        scene_image = cv2.resize(scene_image, None, fx=1 / 3, fy=1 / 3)
+        # screen_image = cv2.resize(screen_image, (400, 300))
 
-        if self.surface.uid in result.mapped_gaze:
-            for surface_gaze in result.mapped_gaze[self.surface.uid]:
-                gaze = surface_gaze.x, surface_gaze.y
-                gaze = (
-                    gaze[0] * self.screen_size[0],
-                    (1 - gaze[1]) * self.screen_size[1],
-                )
+        sift = cv2.SIFT_create()
 
-        surf_to_img_trans = None
-        if result.located_aois[self.surface.uid] is not None:
-            surf_to_img_trans = result.located_aois[
-                self.surface.uid
-            ].transform_matrix_from_surface_to_image_undistorted
+        screen_kp, screen_desc = sift.detectAndCompute(screen_image, None)
+        scene_kp, scene_desc = sift.detectAndCompute(scene_image, None)
 
-        return gaze, result.markers, surf_to_img_trans
+        FLANN_INDEX_KDTREE = 1
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+        matches = flann.knnMatch(screen_desc, scene_desc, k=2)
+        # store all the good matches as per Lowe's ratio test.
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+
+        MIN_MATCH_COUNT = 10
+        if len(good) > MIN_MATCH_COUNT:
+            screen_pts = np.float32([screen_kp[m.queryIdx].pt for m in good]).reshape(
+                -1, 1, 2
+            )
+            screen_pts *= 4
+
+            scene_pts = np.float32([scene_kp[m.trainIdx].pt for m in good]).reshape(
+                -1, 1, 2
+            )
+            scene_pts *= 3
+
+            scene_to_screen_trans, mask = cv2.findHomography(
+                scene_pts, screen_pts, cv2.RANSAC, 5.0
+            )
+
+            gaze = scene_to_screen_trans @ np.array([gaze.x, gaze.y, 1])
+            gaze = gaze[:2] / gaze[2]
+
+            return gaze, scene_to_screen_trans
+        else:
+            return None, None
 
     def distort_point(self, p):
         p_hom = np.array([p[0], p[1], 1])
