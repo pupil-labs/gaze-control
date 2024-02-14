@@ -5,10 +5,10 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from eye_tracking_provider import EyeTrackingData
-from widgets.gaze_button import GazeButton
+from widgets.gaze_button import GazeButton, ButtonStyle
 
 
-class ModeMenu(QWidget):
+class ModeMenuPermanent(QWidget):
     mode_changed = Signal(str)
 
     def __init__(self, parent=None, modes=[]):
@@ -17,16 +17,25 @@ class ModeMenu(QWidget):
         self.disappear_timeout = 3.0
         self.lost_focus_at = None
 
-        layout = QVBoxLayout()
+        layout = QGridLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
+        self.n_rows = 4
+        self.n_cols = 10
+        for i in range(self.n_cols):
+            layout.setColumnStretch(i, 1)
+        for i in range(self.n_rows):
+            layout.setRowStretch(i, 1)
+
         self.buttons = []
 
-        for mode in modes:
-            btn = GazeButton(mode)
+        for idx, mode in enumerate(modes):
+            regular_style = ButtonStyle(background_color="lightgreen")
+            hover_style = ButtonStyle(background_color="white")
+            btn = GazeButton(mode, regular_style=regular_style, hover_style=hover_style)
             btn.clicked.connect(lambda mode=mode: self.mode_changed.emit(mode))
-            layout.addWidget(btn)
+            layout.addWidget(btn, 3, idx + 1, 1, 1)
             self.buttons.append(btn)
 
         self.setLayout(layout)
@@ -40,10 +49,7 @@ class ModeMenu(QWidget):
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
-        self.setVisible(False)
-
     def on_button_clicked(self):
-        self.setVisible(False)
         self.mode_change = True
 
     def update_data(self, eye_tracking_data: EyeTrackingData):

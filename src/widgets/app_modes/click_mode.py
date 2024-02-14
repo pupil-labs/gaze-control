@@ -22,6 +22,9 @@ class ClickMode(AppMode):
     def _update_data(self, eye_tracking_data: EyeTrackingData):
         self.gaze_overlay.update_data(eye_tracking_data)
 
+        if eye_tracking_data.gaze is None:
+            return
+
         p = QPoint(*eye_tracking_data.gaze)
         if eye_tracking_data.dwell_process != 1.0:
             pass

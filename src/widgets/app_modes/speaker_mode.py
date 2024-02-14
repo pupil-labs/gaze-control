@@ -63,9 +63,6 @@ class SpeakerMode(AppMode):
     def activate(self):
         super().activate()
         self._set_window_transparency_for_input(False)
-        if sys.platform == "darwin":
-            # Required to give the window focus on macOS
-            self.raise_()
         self.activateWindow()
         self.text_edit.setFocus()
 
@@ -104,7 +101,7 @@ class SpeakerMode(AppMode):
 
     def resize(self, size):
         super().resize(size)
-        height_ratio = 0.55
+        height_ratio = 0.65
         self.text_form.setGeometry(
             0,
             0,

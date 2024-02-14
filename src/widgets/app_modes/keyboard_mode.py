@@ -20,7 +20,7 @@ class KeyboardMode(AppMode):
 
     def resize(self, size):
         super().resize(size)
-        height_ratio = 0.55
+        height_ratio = 0.65
         self.keyboard.setGeometry(
             0,
             size.height() * (1 - height_ratio),
