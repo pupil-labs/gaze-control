@@ -2,7 +2,7 @@ import sys
 from collections import namedtuple
 
 from pupil_labs.realtime_api.simple import discover_one_device, Device
-from pupil_labs.realtime_api import GazeData
+from pupil_labs.realtime_api import EyestateGazeData, GazeData
 
 RawETData = namedtuple("RawETData", ["timestamp", "raw_gaze", "scene", "eyes"])
 
@@ -18,12 +18,12 @@ class RawDataReceiver:
     def scene_calibration(self):
         return self.device.get_calibration()
 
-    def _smooth_gaze(self, gaze: GazeData):
+    def _smooth_gaze(self, gaze: EyestateGazeData):
         self._gaze_history.append(gaze)
         if len(self._gaze_history) > self.smoothing_window_size:
             self._gaze_history.pop(0)
-
-        return GazeData(*(sum(x) / len(x) for x in zip(*self._gaze_history)))
+        gaze_avg = (sum(x) / len(x) for x in zip(*self._gaze_history))
+        return EyestateGazeData(*gaze_avg)
 
     def connect(self, auto_discover=False, ip=None, port=None):
         assert auto_discover or (ip is not None and port is not None)
